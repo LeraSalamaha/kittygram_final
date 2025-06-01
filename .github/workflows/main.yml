@@ -8,6 +8,20 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: kittygram_user
+          POSTGRES_PASSWORD: kittygram_password
+          POSTGRES_DB: kittygram
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -27,6 +41,14 @@ jobs:
       
       - name: Run backend tests
         working-directory: ./backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: kittygram
+          DB_USER: kittygram_user
+          DB_PASSWORD: kittygram_password
+          SECRET_KEY: test-secret-key
+          DEBUG: "False"
         run: |
           pip install -r requirements.txt
           python manage.py test
@@ -58,21 +80,27 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/kittygram_backend:latest
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/kittygram_backend:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/kittygram_backend:${{ github.sha }}
       
       - name: Build and push frontend
         uses: docker/build-push-action@v4
         with:
           context: ./frontend
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/kittygram_frontend:latest
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/kittygram_frontend:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/kittygram_frontend:${{ github.sha }}
       
       - name: Build and push gateway
         uses: docker/build-push-action@v4
         with:
           context: ./nginx
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/kittygram_gateway:latest
+          tags: |
+            ${{ secrets.DOCKER_HUB_USERNAME }}/kittygram_gateway:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/kittygram_gateway:${{ github.sha }}
 
   deploy:
     needs: build_and_push_to_docker_hub
@@ -88,7 +116,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,.env"
           target: "~/kittygram/"
       
       - name: Deploy to server
@@ -100,16 +128,19 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd ~/kittygram
+            docker compose down || true
             docker compose pull
-            docker compose down
             docker compose up -d
-            docker compose exec backend python manage.py migrate
+            sleep 10  # Даем контейнерам время на запуск
+            docker compose exec backend python manage.py migrate --no-input
             docker compose exec backend python manage.py collectstatic --no-input
             docker compose exec backend cp -r /app/collected_static/. /static/
+            docker compose ps
       
       - name: Send Telegram notification
+        if: success()
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          message: "Kittygram успешно развёрнут!"
+          message: "✅ Kittygram успешно развёрнут! (${{ github.sha }})"
