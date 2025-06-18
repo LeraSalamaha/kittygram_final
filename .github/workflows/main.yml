@@ -5,7 +5,15 @@ on:
     branches: [ main ]
 
 env:
-  DOCKERHUB_USERNAME: lerasalamaha  # Ваш логин Docker Hub
+  POSTGRES_DB: kittygram
+  POSTGRES_USER: kittygram_user
+  POSTGRES_PASSWORD: kittygram_password
+  DB_NAME: kittygram
+  DB_HOST: localhost
+  DB_PORT: 5432
+  SECRET_KEY: 11052004Lera
+  DEBUG: "False"
+  ALLOWED_HOSTS: "*"
 
 jobs:
   tests:
@@ -14,9 +22,9 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_USER: kittygram_user
-          POSTGRES_PASSWORD: kittygram_password
-          POSTGRES_DB: kittygram
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
         ports:
           - 5432:5432
         options: >-
@@ -42,58 +50,43 @@ jobs:
           cd backend
           python manage.py test
 
-  build_and_push:
+  build_locally:
     needs: tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ env.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      
-      - name: Build and push backend
+      - name: Build Docker images
         run: |
-          docker build -t ${{ env.DOCKERHUB_USERNAME }}/kittygram_backend ./backend
-          docker push ${{ env.DOCKERHUB_USERNAME }}/kittygram_backend
-      
-      - name: Build and push frontend
-        run: |
-          docker build -t ${{ env.DOCKERHUB_USERNAME }}/kittygram_frontend ./frontend
-          docker push ${{ env.DOCKERHUB_USERNAME }}/kittygram_frontend
-      
-      - name: Build and push gateway
-        run: |
-          docker build -t ${{ env.DOCKERHUB_USERNAME }}/kittygram_gateway ./nginx
-          docker push ${{ env.DOCKERHUB_USERNAME }}/kittygram_gateway
+          docker build -t kittygram_backend ./backend
+          docker build -t kittygram_frontend ./frontend
+          docker build -t kittygram_gateway ./nginx
 
   deploy:
-    needs: build_and_push
+    needs: build_locally
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       
+      - name: Copy files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "docker-compose.yml,backend/Dockerfile,frontend/Dockerfile,nginx/Dockerfile"
+          target: "~/kittygram/"
+      
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd ~/kittygram
-            echo "POSTGRES_DB=kittygram" > .env
-            echo "POSTGRES_USER=kittygram_user" >> .env
-            echo "POSTGRES_PASSWORD=kittygram_password" >> .env
-            echo "DB_NAME=kittygram" >> .env
-            echo "DB_HOST=db" >> .env
-            echo "DB_PORT=5432" >> .env
-            echo "SECRET_KEY=11052004Lera" >> .env
-            echo "DEBUG=False" >> .env
-            echo "ALLOWED_HOSTS=*" >> .env
             docker compose down
-            docker compose pull
+            docker compose build --no-cache
             docker compose up -d
             docker compose exec backend python manage.py migrate
             docker compose exec backend python manage.py collectstatic --no-input
