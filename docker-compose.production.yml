@@ -12,43 +12,29 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     restart: always
-    backend:
-    image: lerasalamaha/kittygram_backend
-    restart: always
-  frontend:
-    image: lerasalamaha/kittygram_frontend
-    restart: always
-  gateway:
-    image: lerasalamaha/kittygram_gateway
-    restart: always
 
   backend:
-    image: ${DOCKERHUB_USERNAME}/kittygram_backend:latest
+    image: ${DOCKERHUB_USERNAME}/kittygram_backend
     env_file: .env
     volumes:
-      - static:/app/static  # Единый путь для статики
+      - static:/app/static
       - media:/app/media
-    command: >
-      sh -c "python manage.py migrate &&
-      python manage.py collectstatic --no-input &&
-      gunicorn --bind 0.0.0.0:8000 kittygram_backend.wsgi"
     depends_on:
       - db
     restart: always
 
   frontend:
-    image: ${DOCKERHUB_USERNAME}/kittygram_frontend:latest
+    image: ${DOCKERHUB_USERNAME}/kittygram_frontend
     volumes:
-      - static:/app/static  # Тот же путь
-    command: sh -c "cp -r /app/build/. /app/static/"
+      - static:/app/static
     restart: always
 
   gateway:
-    image: ${DOCKERHUB_USERNAME}/kittygram_gateway:latest
+    image: ${DOCKERHUB_USERNAME}/kittygram_gateway
     ports:
       - "9000:80"
     volumes:
-      - static:/static  # Проще путь
+      - static:/static
       - media:/media
     depends_on:
       - backend
