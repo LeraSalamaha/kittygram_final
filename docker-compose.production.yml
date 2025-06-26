@@ -12,6 +12,15 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     restart: always
+    backend:
+    image: lerasalamaha/kittygram_backend
+    restart: always
+  frontend:
+    image: lerasalamaha/kittygram_frontend
+    restart: always
+  gateway:
+    image: lerasalamaha/kittygram_gateway
+    restart: always
 
   backend:
     image: ${DOCKERHUB_USERNAME}/kittygram_backend:latest
