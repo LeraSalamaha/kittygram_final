@@ -63,19 +63,19 @@ jobs:
           docker build -t kittygram_gateway ./nginx
 
   deploy:
-    needs: build_and_push
+    needs: build_locally
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       
-      - name: Copy ONLY compose file
+      - name: Copy only compose file
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          source: "docker-compose.production.yml"  # Только production compose файл
+          source: "docker-compose.yml"
           target: "~/kittygram/"
       
       - name: Deploy to server
@@ -87,14 +87,12 @@ jobs:
           port: 22
           script: |
             cd ~/kittygram
-            # Авторизация в Docker Hub
-            echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ env.DOCKERHUB_USERNAME }} --password-stdin
-            # Остановка и удаление старых контейнеров
-            docker compose -f docker-compose.production.yml down
-            # Получение новых образов
-            docker compose -f docker-compose.production.yml pull
-            # Запуск новых контейнеров
-            docker compose -f docker-compose.production.yml up -d
-            # Выполнение миграций и сбор статики
-            docker compose -f docker-compose.production.yml exec backend python manage.py migrate
-            docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --no-input
+            docker compose pull
+            # Останавливаем и удаляем старые контейнеры
+            docker compose down
+            # Получаем свежие образы из Docker Hub
+            # Запускаем новые контейнеры
+            docker compose up -d
+            # Выполняем миграции и сбор статики
+            docker compose exec backend python manage.py migrate
+            docker compose exec backend python manage.py collectstatic --no-input
