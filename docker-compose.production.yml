@@ -12,12 +12,21 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     restart: always
+    backend:
+    image: lerasalamaha/kittygram_backend
+    restart: always
+  frontend:
+    image: lerasalamaha/kittygram_frontend
+    restart: always
+  gateway:
+    image: lerasalamaha/kittygram_gateway
+    restart: always
 
   backend:
     image: ${DOCKERHUB_USERNAME}/kittygram_backend:latest
     env_file: .env
     volumes:
-      - static:/app/static
+      - static:/app/static  # Единый путь для статики
       - media:/app/media
     command: >
       sh -c "python manage.py migrate &&
@@ -30,7 +39,7 @@ services:
   frontend:
     image: ${DOCKERHUB_USERNAME}/kittygram_frontend:latest
     volumes:
-      - static:/app/static
+      - static:/app/static  # Тот же путь
     command: sh -c "cp -r /app/build/. /app/static/"
     restart: always
 
@@ -39,7 +48,7 @@ services:
     ports:
       - "9000:80"
     volumes:
-      - static:/static
+      - static:/static  # Проще путь
       - media:/media
     depends_on:
       - backend
