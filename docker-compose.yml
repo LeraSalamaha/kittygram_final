@@ -14,7 +14,7 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend/
+    image: lerasalamaha/backend/kittygram_backend
     env_file:
       - .env
     volumes:

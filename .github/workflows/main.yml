@@ -87,10 +87,10 @@ jobs:
           port: 22
           script: |
             cd ~/kittygram
+            docker compose pull
             # Останавливаем и удаляем старые контейнеры
             docker compose down
             # Получаем свежие образы из Docker Hub
-            docker compose pull
             # Запускаем новые контейнеры
             docker compose up -d
             # Выполняем миграции и сбор статики
