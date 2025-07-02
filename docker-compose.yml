@@ -1,4 +1,4 @@
-version: '3'
+
 
 volumes:
   static:
@@ -30,7 +30,7 @@ services:
     env_file:
       - .env
 
-  gateway:
+  nginx:
     build: ./nginx/
     ports:
       - "9000:9000"
@@ -40,4 +40,3 @@ services:
     depends_on:
       - backend
       - frontend
-      

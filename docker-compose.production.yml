@@ -1,4 +1,4 @@
-version: '3'
+
 
 volumes:
   static:
@@ -34,8 +34,8 @@ services:
     command: sh -c "cp -r /app/build/. /app/static/"
     restart: always
 
-  gateway:
-    image: ${DOCKERHUB_USERNAME}/kittygram_gateway:latest
+  nginx:
+    image: ${DOCKERHUB_USERNAME}/kittygram_nginx:latest
     ports:
       - "9000:80"
     volumes:
