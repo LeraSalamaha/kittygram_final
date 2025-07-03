@@ -19,4 +19,4 @@ RUN pip install --upgrade pip && \
 COPY . .
 
 # Команда для запуска приложения
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "kittygramfinal.ddns.net", "kittygram.valeriasalamaha.ru"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "kittygramfinal.ddns.net", "kittygram.valeriasalamaha.ru","valeriasalamaha.ru"]
