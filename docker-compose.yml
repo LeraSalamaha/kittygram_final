@@ -1,43 +1,83 @@
-
+version: '3.8'
 
 volumes:
-  static:
-  media:
-  pg_data:
+  static_kitty:
+  media_kitty:
+  static_taski:
+  pg_data_kitty:
+  pg_data_taski:
 
 services:
-  db:
+  # KittyGram Database
+  db_kitty:
     image: postgres:13
     env_file:
       - .env
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_data_kitty:/var/lib/postgresql/data
 
-  backend:
+  # KittyGram Backend
+  backend_kitty:
     image: lerasalamaha/kittygram_backend
     env_file:
       - .env
     volumes:
-      - static:/app/collected_static 
-      - media:/app/media
+      - static_kitty:/app/collected_static
+      - media_kitty:/app/media
     depends_on:
-      - db
+      - db_kitty
 
-  frontend:
+  # KittyGram Frontend
+  frontend_kitty:
     build: ./frontend/
     volumes:
-      - static:/app/static
+      - static_kitty:/app/static
     env_file:
       - .env
 
+  # Taski Database
+  db_taski:
+    image: postgres:13
+    env_file:
+      - .env.taski
+    volumes:
+      - pg_data_taski:/var/lib/postgresql/data
+
+  # Taski Backend
+  backend_taski:
+    image: your_taski_backend_image  # Замените на ваш образ
+    env_file:
+      - .env.taski
+    depends_on:
+      - db_taski
+
+  # Taski Frontend
+  frontend_taski:
+    image: your_taski_frontend_image  # Замените на ваш образ
+    env_file:
+      - .env.taski
+
+  # Nginx (общий для обоих проектов)
   nginx:
     build: ./nginx/
     ports:
-      - "9000:9000"
+      - "80:80"
+      - "443:443"
     volumes:
-      - static:/static
-      - media:/media
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/letsencrypt
+      - static_kitty:/static
+      - media_kitty:/media
     depends_on:
-      - backend
-      - frontend
-      
+      - backend_kitty
+      - frontend_kitty
+      - backend_taski
+      - frontend_taski
+
+  # Certbot для SSL
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    command: certonly --webroot --webroot-path=/var/www/html --email your@email.com --agree-tos --no-eff-email -d kittygramfinal.ddns.net -d taski.valeriasalamaha.ru
