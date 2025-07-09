@@ -7,7 +7,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-cg6*%6d51ef8f#4!r3*$vmxm4)abgjw8mo!4y-q*uq1!4$-89$'
 
-
+SECURE_SSL_REDIRECT = False
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+if 'test' in sys.argv:
+    SECURE_SSL_REDIRECT = False
 DEBUG = True
 
 ALLOWED_HOSTS = ['5.18.249.138', 'kittygramfinal.ddns.net', 'localhost']
