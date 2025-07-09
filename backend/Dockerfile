@@ -1,22 +1,7 @@
-# Используем официальный образ Python
 FROM python:3.9
-
-# Устанавливаем рабочую директорию
 WORKDIR /app
-
-
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-# Копируем файл зависимостей
+RUN pip install gunicorn==20.1.0
 COPY requirements.txt .
-
-# Устанавливаем зависимости
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt --no-cache-dir
-
-# Копируем остальные файлы проекта
+RUN pip install --r requirements.txt --no-cache-dir
 COPY . .
-
-# Команда для запуска приложения
-CMD ["gunicorn", "kittygram_backend.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "--bind", "0.0.0.0:9000", "kittygramfinal.ddns.net"]
