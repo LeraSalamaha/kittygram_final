@@ -60,8 +60,8 @@ services:
     image: kittygram_gateway
     container_name: gateway
     ports:
-      - "80:80"  # Изменено с 9000 на стандартный HTTP порт
-      - "443:443" # Для HTTPS
+      - "8080:80"  # Изменено с 9000 на стандартный HTTP порт
+      - "8443:443" # Для HTTPS
     volumes:
       - static:/static
       - media:/media
