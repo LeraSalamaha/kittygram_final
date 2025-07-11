@@ -13,25 +13,23 @@ services:
       - .env
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-kittygram}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-kittygram_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kittygram_password}
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kittygram_user}"]
       interval: 5s
       timeout: 5s
       retries: 5
-    ports:
-      - "5432:5432"  # Для внешнего подключения при необходимости
+    networks:
+      - kittygram_network
 
   backend:
     image: lerasalamaha/kittygram_backend
     container_name: backend
     env_file:
       - .env
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-kittygram}
     volumes:
       - static:/app/collected_static
       - media:/app/media
@@ -39,6 +37,8 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - kittygram_network
 
   frontend:
     build: 
@@ -52,6 +52,8 @@ services:
       - .env
     depends_on:
       - backend
+    networks:
+      - kittygram_network
 
   gateway:
     build:
@@ -60,8 +62,7 @@ services:
     image: kittygram_gateway
     container_name: gateway
     ports:
-      - "8080:80"  # Изменено с 9000 на стандартный HTTP порт
-      - "8443:443" # Для HTTPS
+      - "80:80" 
     volumes:
       - static:/static
       - media:/media
@@ -71,3 +72,9 @@ services:
       - backend
       - frontend
     restart: always
+    networks:
+      - kittygram_network
+
+networks:
+  kittygram_network:
+    driver: bridge
