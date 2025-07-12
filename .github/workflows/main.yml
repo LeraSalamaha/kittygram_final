@@ -97,3 +97,4 @@ jobs:
             # Выполняем миграции и сбор статики
             docker compose exec backend python manage.py migrate
             docker compose exec backend python manage.py collectstatic --no-input
+            
