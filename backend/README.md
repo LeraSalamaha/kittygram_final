@@ -24,6 +24,7 @@ python3 -m venv env
 
 * Если у вас windows
 
+
     ```
     source env/scripts/activate
     ```
