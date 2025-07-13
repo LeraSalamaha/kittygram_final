@@ -15,8 +15,6 @@ env:
   DEBUG: "False"
   ALLOWED_HOSTS: "*"
   
-
-
 jobs:
   tests:
     runs-on: ubuntu-latest
