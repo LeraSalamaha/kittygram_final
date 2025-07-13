@@ -63,6 +63,7 @@ jobs:
           docker build -t kittygram_frontend ./frontend
           docker build -t kittygram_gateway ./nginx
 
+
   deploy:
     needs: build_locally
     runs-on: ubuntu-latest
@@ -93,4 +94,3 @@ jobs:
             docker compose up -d
             docker compose exec backend python manage.py migrate
             docker compose exec backend python manage.py collectstatic --no-input
-            
