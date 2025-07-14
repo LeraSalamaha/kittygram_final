@@ -68,17 +68,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Add SSH key to agent
+      - name: Setup SSH key
         env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          echo "$SSH_KEY" | pbcopy 
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_rsa <<< "$SSH_PASSPHRASE"
+          echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/id_rsa -
       
-      - name: Copy only compose file
+      - name: Copy compose file
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -89,8 +91,7 @@ jobs:
           source: "docker-compose.yml"
           target: "~/kittygram/"
       
-      
-      - name: Deploy to server
+      - name: Deploy application
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
