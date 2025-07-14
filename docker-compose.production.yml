@@ -27,6 +27,9 @@ services:
 
   gateway:
     image: lerasalamaha/kittygram_gateway
+    depends_on:
+      - backend 
+      - frontend
     env_file: .env
     ports:
       - 8000:80
