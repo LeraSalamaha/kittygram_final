@@ -10,6 +10,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['kittygramfinal.ddns.net', 'localhost', '89.169.171.167','5.183.152.55']
 
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
