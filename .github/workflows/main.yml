@@ -89,7 +89,7 @@ jobs:
           source: "docker-compose.yml"
           target: "~/kittygram/"
       
-      
+
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
