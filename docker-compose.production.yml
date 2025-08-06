@@ -1,4 +1,5 @@
 version: '3'
+
 volumes:
   pg_data:
   static:
@@ -14,25 +15,27 @@ services:
   backend:
     image: lerasalamaha/kittygram_backend
     env_file: .env
+    depends_on:
+      - db
     volumes:
-      - static:/static
-      - media:/media
+      - static:/app/static/
+      - media:/app/media/
 
   frontend:
     image: lerasalamaha/kittygram_frontend
     env_file: .env
-    command: cp -r /app/build/. /static/
+    command: cp -r /app/build/. /app/static/
     volumes:
-      - static:/static
+      - static:/app/static/
 
   gateway:
     image: lerasalamaha/kittygram_gateway
     depends_on:
-      - backend 
+      - backend
       - frontend
     env_file: .env
     ports:
       - 8000:80
     volumes:
-      - static:/static
-      - media:/media
+      - static:/app/static/
+      - media:/app/media/
