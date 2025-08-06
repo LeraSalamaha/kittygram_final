@@ -15,11 +15,13 @@ services:
   backend:
     image: lerasalamaha/kittygram_backend
     env_file: .env
+
     depends_on:
       - db
     volumes:
       - static:/app/static/
       - media:/app/media/
+
 
   frontend:
     image: lerasalamaha/kittygram_frontend
@@ -39,3 +41,4 @@ services:
     volumes:
       - static:/app/static/
       - media:/app/media/
+
